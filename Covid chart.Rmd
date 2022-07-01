@@ -1,0 +1,50 @@
+---
+title: "First Year Exam Bioinformatics"
+author: "Ethan Lai( (PID A59010400)"
+date: "6/14/2022"
+output: pdf_document
+---
+
+```{r}
+library("ggplot2")
+
+# read data as a dataframe, with unecessary "Total" data removed
+data<- read.csv("covid19_variants.csv")
+data.df<- data.frame (data[data$variant_name!="Total",])
+data.df$date2<-format(as.Date(data.df$date), "%d/%m/%Y")
+
+# produce lineplot grouped by variant_name, with date mapped to x-axis and percentage mapped to y axis
+plot<- ggplot(data.df, aes (factor(date), percentage, group= variant_name, color=variant_name)) +
+  geom_line() + 
+  ggtitle("COVID-19 Variants in California") +
+  xlab("Date") + ylab("Percentage of Sequenced Specimens")+
+  
+  #get rid of dense redundant x axis ticks
+  theme(axis.text.x=element_blank(),
+        axis.ticks.x=element_blank())
+  
+plot
+```
+
+We now have a plot that's missing just the x-axis tick labels showing us the dates, which we can add farily easily. First, we extract a vector of dates in a format we're happy with:
+```{r}
+#reformatting date column into a more compact format
+dates <- unique(format(as.Date(data$date), "%m/%Y"))
+dates<-factor(dates)
+```
+
+Now we can add these dates on the x-axis as a custum annotation using the annotate() function
+```{r}
+#extract x-axis scale
+x.scale<- layer_scales(plot)$x$get_limits()
+
+# Create a scale for our custom annotation
+test<- seq(0,length(x.scale),length(x.scale)/(length(dates)-1))
+
+# Add annotation to the plot
+plot<- plot + 
+  coord_cartesian(xlim = c(-20,540))+
+  annotate(geom = "text", x = test, y = -10, label = dates, size = 1.5, angle=90)
+plot
+```
+
